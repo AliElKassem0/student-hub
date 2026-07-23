@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 
 type Course = { id: number; name: string; time: string; room: string };
-type Homework = { id: number; courseId: number; title: string; description: string; dueDate: string };
+type Homework = { id: number; courseId: number; title: string; description: string; dueDate: string; done: boolean };
 
 export default function HomeworkPage() {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -31,7 +31,7 @@ export default function HomeworkPage() {
 
     setHomework([
       ...homework,
-      { id: Date.now(), courseId: Number(courseId), title, description, dueDate },
+      { id: Date.now(), courseId: Number(courseId), title, description, dueDate, done: false },
     ]);
 
     setTitle("");
@@ -41,6 +41,12 @@ export default function HomeworkPage() {
 
   function deleteHomework(id: number) {
     setHomework(homework.filter((hw) => hw.id !== id));
+  }
+
+  function toggleDone(id: number) {
+    setHomework(
+      homework.map((hw) => (hw.id === id ? { ...hw, done: !hw.done } : hw))
+    );
   }
 
   return (
@@ -66,6 +72,7 @@ export default function HomeworkPage() {
         const course = courses.find((c) => c.id === hw.courseId);
         return (
           <div key={hw.id}>
+            <input type="checkbox" checked={hw.done} onChange={() => toggleDone(hw.id)} />
             <strong>{hw.title}</strong> — {course ? course.name : "Unknown course"} — due {hw.dueDate}
             <div>{hw.description}</div>
             <button onClick={() => deleteHomework(hw.id)}>Delete</button>
