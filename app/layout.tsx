@@ -28,15 +28,19 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
-        <nav>
-          <Link href="/">Home</Link>
-          {" | "}
-          <Link href="/courses">Courses</Link>
-          {" | "}
-          <Link href="/homework">Homework</Link>
+      <body className="min-h-full flex flex-col bg-slate-900 text-slate-100">
+        <nav className="border-b border-slate-700 bg-slate-800 px-6 py-4 flex gap-6">
+          <Link href="/" className="font-medium text-slate-300 hover:text-blue-400">
+            Home
+          </Link>
+          <Link href="/courses" className="font-medium text-slate-300 hover:text-blue-400">
+            Courses
+          </Link>
+          <Link href="/homework" className="font-medium text-slate-300 hover:text-blue-400">
+            Homework
+          </Link>
         </nav>
-        {children}
+        <main className="max-w-2xl mx-auto w-full p-6">{children}</main>
       </body>
     </html>
   );
