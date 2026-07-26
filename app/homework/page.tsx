@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 type Course = { id: number; name: string; time: string; room: string };
 type Homework = { id: number; courseId: number; title: string; description: string; dueDate: string; done: boolean };
@@ -14,6 +14,8 @@ export default function HomeworkPage() {
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
 
+  const isFirstRender = useRef(true);
+
   useEffect(() => {
     const savedCourses = localStorage.getItem("courses");
     if (savedCourses) setCourses(JSON.parse(savedCourses));
@@ -22,9 +24,13 @@ export default function HomeworkPage() {
     if (savedHomework) setHomework(JSON.parse(savedHomework));
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem("homework", JSON.stringify(homework));
-  }, [homework]);
+ useEffect(() => {
+  if (isFirstRender.current) {
+    isFirstRender.current = false;
+    return;
+  }
+  localStorage.setItem("homework", JSON.stringify(homework));
+}, [homework]);
 
   function addHomework() {
     if (title.trim() === "" || courseId === "") return;
