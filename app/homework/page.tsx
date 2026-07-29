@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import DatePicker, { formatLabel } from "../components/DatePicker";
 
 type Course = { id: number; name: string; time: string; room: string };
 type Homework = { id: number; courseId: number; title: string; description: string; dueDate: string; done: boolean };
@@ -84,11 +85,11 @@ export default function HomeworkPage() {
           placeholder="Description"
           className="flex-1 min-w-[140px] rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <input
-          type="date"
+        <DatePicker
           value={dueDate}
-          onChange={(e) => setDueDate(e.target.value)}
-          className="rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          onChange={setDueDate}
+          placeholder="Due date"
+          className="min-w-[160px]"
         />
         <button
           onClick={addHomework}
@@ -121,7 +122,7 @@ export default function HomeworkPage() {
                   </p>
                   <p className="text-sm text-slate-400">
                     {course ? course.name : "Unknown course"}
-                    {hw.dueDate && ` · due ${hw.dueDate}`}
+                    {hw.dueDate && ` · due ${formatLabel(hw.dueDate)}`}
                   </p>
                   {hw.description && (
                     <p className="mt-1 text-sm text-slate-300">{hw.description}</p>
