@@ -5,6 +5,37 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Tell the browser to draw native UI (scrollbars, form controls) dark. */
+:root {
+  color-scheme: dark;
+}
+
 body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Dark scrollbar for the picker columns. The standard properties cover
+   Firefox and Chrome 121+; the -webkit- rules cover older Chrome/Safari/Edge.
+   Colours are literal slate-600/500 so they don't depend on Tailwind
+   emitting the matching theme variables. */
+.themed-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #475569 transparent;
+}
+
+.themed-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.themed-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.themed-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #475569;
+  border-radius: 9999px;
+}
+
+.themed-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #64748b;
 }

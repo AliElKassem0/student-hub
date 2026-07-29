@@ -2,11 +2,15 @@
 
 import { useState, useEffect, useRef } from "react";
 import ConfirmDialog from "../components/ConfirmDialog";
+import TimePicker from "../components/TimePicker";
+
+const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export default function CoursesPage() {
   const [courses, setCourses] = useState<{id: number; name: string; time: string; room: string}[]>([]);
 
   const [name, setName] = useState("");
+  const [day, setDay] = useState("");
   const [time, setTime] = useState("");
   const [room, setRoom] = useState("");
 
@@ -31,9 +35,14 @@ export default function CoursesPage() {
   function addCourse() {
     if (name.trim() === "") return;
 
-    setCourses([...courses, { id: Date.now(), name, time, room }]);
+    // Keep storing the slot as one string ("Mon 10:00") so courses saved
+    // before this change still display correctly.
+    const slot = [day, time].filter(Boolean).join(" ");
+
+    setCourses([...courses, { id: Date.now(), name, time: slot, room }]);
 
     setName("");
+    setDay("");
     setTime("");
     setRoom("");
   }
@@ -78,12 +87,19 @@ export default function CoursesPage() {
           placeholder="Course name"
           className="flex-1 min-w-[140px] rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <input
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
-          placeholder="Time (e.g. Mon 10:00)"
-          className="flex-1 min-w-[140px] rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+        <select
+          value={day}
+          onChange={(e) => setDay(e.target.value)}
+          className="min-w-[110px] rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Day</option>
+          {WEEKDAYS.map((weekday) => (
+            <option key={weekday} value={weekday}>
+              {weekday}
+            </option>
+          ))}
+        </select>
+        <TimePicker value={time} onChange={setTime} placeholder="Time" className="min-w-[120px]" />
         <input
           value={room}
           onChange={(e) => setRoom(e.target.value)}
