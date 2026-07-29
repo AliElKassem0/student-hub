@@ -3,9 +3,21 @@
 import { useState } from "react";
 import ConfirmDialog from "../components/ConfirmDialog";
 import TimePicker from "../components/TimePicker";
-import { useCourses, useHomework } from "../lib/store";
+import { useCourses, useHomework, type Course } from "../lib/store";
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+const fieldClasses =
+  "rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500";
+
+// Split a stored slot ("Mon 10:00") back into its parts so it can be edited.
+// Anything that doesn't start with a weekday is kept as-is rather than
+// discarded, so courses saved before the picker existed survive an edit.
+function parseSlot(slot: string) {
+  const [first, ...rest] = slot.trim().split(/\s+/);
+  if (WEEKDAYS.includes(first)) return { day: first, time: rest.join(" ") };
+  return { day: "", time: slot.trim() };
+}
 
 export default function CoursesPage() {
   const [courses, setCourses] = useCourses();
@@ -18,6 +30,37 @@ export default function CoursesPage() {
 
   // The course awaiting delete confirmation, plus how much homework it drags with it.
   const [pendingDelete, setPendingDelete] = useState<{id: number; name: string; linkedCount: number} | null>(null);
+
+  // One course is editable at a time; its draft values live here.
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editDay, setEditDay] = useState("");
+  const [editTime, setEditTime] = useState("");
+  const [editRoom, setEditRoom] = useState("");
+
+  function startEdit(course: Course) {
+    const slot = parseSlot(course.time);
+    setEditingId(course.id);
+    setEditName(course.name);
+    setEditDay(slot.day);
+    setEditTime(slot.time);
+    setEditRoom(course.room);
+  }
+
+  function saveEdit() {
+    if (editName.trim() === "") return;
+
+    const slot = [editDay, editTime].filter(Boolean).join(" ");
+
+    setCourses(
+      courses.map((course) =>
+        course.id === editingId
+          ? { ...course, name: editName, time: slot, room: editRoom }
+          : course,
+      ),
+    );
+    setEditingId(null);
+  }
 
   function addCourse() {
     if (name.trim() === "") return;
@@ -96,25 +139,85 @@ export default function CoursesPage() {
         <p className="text-slate-400">No courses yet. Add your first one above.</p>
       ) : (
         <div className="flex flex-col gap-3">
-          {courses.map((course) => (
-            <div
-              key={course.id}
-              className="flex items-center justify-between rounded-lg border border-slate-700 bg-slate-800 p-4 shadow-sm"
-            >
-              <div>
-                <p className="font-semibold">{course.name}</p>
-                <p className="text-sm text-slate-400">
-                  {course.time || "No time"} · {course.room || "No room"}
-                </p>
-              </div>
-              <button
-                onClick={() => requestDeleteCourse(course)}
-                className="rounded-md px-3 py-1 text-sm font-medium text-red-400 hover:bg-red-500/10"
+          {courses.map((course) =>
+            editingId === course.id ? (
+              <div
+                key={course.id}
+                className="flex flex-wrap gap-2 rounded-lg border border-blue-500 bg-slate-800 p-4 shadow-sm"
               >
-                Delete
-              </button>
-            </div>
-          ))}
+                <input
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="Course name"
+                  className={`flex-1 min-w-[140px] ${fieldClasses}`}
+                />
+                <select
+                  value={editDay}
+                  onChange={(e) => setEditDay(e.target.value)}
+                  className={`min-w-[110px] ${fieldClasses}`}
+                >
+                  <option value="">Day</option>
+                  {WEEKDAYS.map((weekday) => (
+                    <option key={weekday} value={weekday}>
+                      {weekday}
+                    </option>
+                  ))}
+                </select>
+                <TimePicker
+                  value={editTime}
+                  onChange={setEditTime}
+                  placeholder="Time"
+                  className="min-w-[120px]"
+                />
+                <input
+                  value={editRoom}
+                  onChange={(e) => setEditRoom(e.target.value)}
+                  placeholder="Room"
+                  className={`flex-1 min-w-[100px] ${fieldClasses}`}
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={saveEdit}
+                    className="rounded-md bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => setEditingId(null)}
+                    className="rounded-md border border-slate-600 px-4 py-2 font-medium text-slate-300 hover:bg-slate-700 hover:text-slate-100"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div
+                key={course.id}
+                className="flex items-center justify-between rounded-lg border border-slate-700 bg-slate-800 p-4 shadow-sm"
+              >
+                <div>
+                  <p className="font-semibold">{course.name}</p>
+                  <p className="text-sm text-slate-400">
+                    {course.time || "No time"} · {course.room || "No room"}
+                  </p>
+                </div>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => startEdit(course)}
+                    className="rounded-md px-3 py-1 text-sm font-medium text-blue-400 hover:bg-blue-500/10"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => requestDeleteCourse(course)}
+                    className="rounded-md px-3 py-1 text-sm font-medium text-red-400 hover:bg-red-500/10"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ),
+          )}
         </div>
       )}
 

@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 import DatePicker, { formatLabel } from "../components/DatePicker";
-import { useCourses, useHomework } from "../lib/store";
+import { useCourses, useHomework, type Homework } from "../lib/store";
+
+const fieldClasses =
+  "rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500";
 
 export default function HomeworkPage() {
   const [courses] = useCourses();
@@ -12,6 +15,40 @@ export default function HomeworkPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
+
+  // One item is editable at a time; its draft values live here.
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editCourseId, setEditCourseId] = useState("");
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editDueDate, setEditDueDate] = useState("");
+
+  function startEdit(hw: Homework) {
+    setEditingId(hw.id);
+    setEditCourseId(String(hw.courseId));
+    setEditTitle(hw.title);
+    setEditDescription(hw.description);
+    setEditDueDate(hw.dueDate);
+  }
+
+  function saveEdit() {
+    if (editTitle.trim() === "" || editCourseId === "") return;
+
+    setHomework(
+      homework.map((hw) =>
+        hw.id === editingId
+          ? {
+              ...hw,
+              courseId: Number(editCourseId),
+              title: editTitle,
+              description: editDescription,
+              dueDate: editDueDate,
+            }
+          : hw,
+      ),
+    );
+    setEditingId(null);
+  }
 
   function addHomework() {
     if (title.trim() === "" || courseId === "") return;
@@ -85,6 +122,61 @@ export default function HomeworkPage() {
         <div className="flex flex-col gap-3">
           {homework.map((hw) => {
             const course = courses.find((c) => c.id === hw.courseId);
+
+            if (editingId === hw.id) {
+              return (
+                <div
+                  key={hw.id}
+                  className="flex flex-wrap gap-2 rounded-lg border border-blue-500 bg-slate-800 p-4 shadow-sm"
+                >
+                  <select
+                    value={editCourseId}
+                    onChange={(e) => setEditCourseId(e.target.value)}
+                    className={`flex-1 min-w-[140px] ${fieldClasses}`}
+                  >
+                    <option value="">Select a course</option>
+                    {courses.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    placeholder="Title"
+                    className={`flex-1 min-w-[140px] ${fieldClasses}`}
+                  />
+                  <input
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    placeholder="Description"
+                    className={`flex-1 min-w-[140px] ${fieldClasses}`}
+                  />
+                  <DatePicker
+                    value={editDueDate}
+                    onChange={setEditDueDate}
+                    placeholder="Due date"
+                    className="min-w-[160px]"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={saveEdit}
+                      className="rounded-md bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => setEditingId(null)}
+                      className="rounded-md border border-slate-600 px-4 py-2 font-medium text-slate-300 hover:bg-slate-700 hover:text-slate-100"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              );
+            }
+
             return (
               <div
                 key={hw.id}
@@ -108,12 +200,20 @@ export default function HomeworkPage() {
                     <p className="mt-1 text-sm text-slate-300">{hw.description}</p>
                   )}
                 </div>
-                <button
-                  onClick={() => deleteHomework(hw.id)}
-                  className="rounded-md px-3 py-1 text-sm font-medium text-red-400 hover:bg-red-500/10"
-                >
-                  Delete
-                </button>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => startEdit(hw)}
+                    className="rounded-md px-3 py-1 text-sm font-medium text-blue-400 hover:bg-blue-500/10"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => deleteHomework(hw.id)}
+                    className="rounded-md px-3 py-1 text-sm font-medium text-red-400 hover:bg-red-500/10"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             );
           })}
