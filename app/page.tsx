@@ -1,4 +1,5 @@
 import Link from "next/link";
+import UpcomingHomework from "./components/UpcomingHomework";
 
 export default function Home() {
   return (
@@ -7,6 +8,8 @@ export default function Home() {
       <p className="text-slate-400 mb-8">
         Keep track of your courses and homework in one place.
       </p>
+
+      <UpcomingHomework />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Link
@@ -21,7 +24,7 @@ export default function Home() {
           className="rounded-lg border border-slate-700 bg-slate-800 p-6 shadow-sm hover:border-blue-500 hover:shadow-md transition"
         >
           <p className="text-lg font-semibold">Homework</p>
-          <p className="text-sm text-slate-400">Track what's due and mark it done.</p>
+          <p className="text-sm text-slate-400">Track what&apos;s due and mark it done.</p>
         </Link>
       </div>
     </div>
