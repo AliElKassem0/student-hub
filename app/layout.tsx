@@ -39,6 +39,9 @@ export default function RootLayout({
           <Link href="/homework" className="font-medium text-slate-300 hover:text-blue-400">
             Homework
           </Link>
+          <Link href="/help" className="font-medium text-slate-300 hover:text-blue-400">
+            Help
+          </Link>
         </nav>
         <main className="max-w-2xl mx-auto w-full p-6">{children}</main>
       </body>
