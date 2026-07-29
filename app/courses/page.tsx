@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import ConfirmDialog from "../components/ConfirmDialog";
 
 export default function CoursesPage() {
   const [courses, setCourses] = useState<{id: number; name: string; time: string; room: string}[]>([]);
@@ -8,6 +9,9 @@ export default function CoursesPage() {
   const [name, setName] = useState("");
   const [time, setTime] = useState("");
   const [room, setRoom] = useState("");
+
+  // The course awaiting delete confirmation, plus how much homework it drags with it.
+  const [pendingDelete, setPendingDelete] = useState<{id: number; name: string; linkedCount: number} | null>(null);
 
   const isFirstRender = useRef(true);
 
@@ -34,22 +38,32 @@ export default function CoursesPage() {
     setRoom("");
   }
 
-  function deleteCourse(id: number) {
-    // Load homework linked to this course
+  function countLinkedHomework(id: number) {
     const savedHomework = localStorage.getItem("homework");
     const homework: {courseId: number } [] = savedHomework ? JSON.parse(savedHomework): [];
-    const linkedCount = homework.filter((hw) => hw.courseId === id).length;
+    return homework.filter((hw) => hw.courseId === id).length;
+  }
 
-    if(linkedCount  > 0) {
-      const ok = window.confirm(`This course has ${linkedCount} homework item(s). Deleting it will also delete them. Continue?`);
-      if(!ok) return;
+  function requestDeleteCourse(course: {id: number; name: string}) {
+    const linkedCount = countLinkedHomework(course.id);
 
-      //Cascade : remove that homework and save it back
-      const remaining = homework.filter((hw) => hw.courseId !== id);
-      localStorage.setItem("homework", JSON.stringify(remaining));
+    // Nothing linked, nothing to warn about.
+    if (linkedCount === 0) {
+      removeCourse(course.id);
+      return;
     }
 
-    //Remove the course itself 
+    setPendingDelete({ id: course.id, name: course.name, linkedCount });
+  }
+
+  function removeCourse(id: number) {
+    //Cascade : remove that homework and save it back
+    const savedHomework = localStorage.getItem("homework");
+    const homework: {courseId: number } [] = savedHomework ? JSON.parse(savedHomework): [];
+    const remaining = homework.filter((hw) => hw.courseId !== id);
+    localStorage.setItem("homework", JSON.stringify(remaining));
+
+    //Remove the course itself
     setCourses(courses.filter((course) => course.id !== id));
   }
 
@@ -100,7 +114,7 @@ export default function CoursesPage() {
                 </p>
               </div>
               <button
-                onClick={() => deleteCourse(course.id)}
+                onClick={() => requestDeleteCourse(course)}
                 className="rounded-md px-3 py-1 text-sm font-medium text-red-400 hover:bg-red-500/10"
               >
                 Delete
@@ -109,6 +123,28 @@ export default function CoursesPage() {
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title="Delete this course?"
+        message={
+          pendingDelete
+            ? `"${pendingDelete.name}" has ${pendingDelete.linkedCount} homework item${
+                pendingDelete.linkedCount === 1 ? "" : "s"
+              } linked to it. Deleting the course will delete ${
+                pendingDelete.linkedCount === 1 ? "it" : "them"
+              } too. This can't be undone.`
+            : ""
+        }
+        confirmLabel="Delete anyway"
+        cancelLabel="Keep course"
+        tone="danger"
+        onConfirm={() => {
+          if (pendingDelete) removeCourse(pendingDelete.id);
+          setPendingDelete(null);
+        }}
+        onCancel={() => setPendingDelete(null)}
+      />
     </div>
   );
 }
