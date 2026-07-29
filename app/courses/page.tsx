@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import ConfirmDialog from "../components/ConfirmDialog";
 import TimePicker from "../components/TimePicker";
+import { useCourses, useHomework } from "../lib/store";
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export default function CoursesPage() {
-  const [courses, setCourses] = useState<{id: number; name: string; time: string; room: string}[]>([]);
+  const [courses, setCourses] = useCourses();
+  const [homework, setHomework] = useHomework();
 
   const [name, setName] = useState("");
   const [day, setDay] = useState("");
@@ -16,21 +18,6 @@ export default function CoursesPage() {
 
   // The course awaiting delete confirmation, plus how much homework it drags with it.
   const [pendingDelete, setPendingDelete] = useState<{id: number; name: string; linkedCount: number} | null>(null);
-
-  const isFirstRender = useRef(true);
-
-  useEffect(() => {
-    const saved = localStorage.getItem("courses");
-    if (saved) setCourses(JSON.parse(saved));
-  }, []);
-
-  useEffect(() => {
-  if (isFirstRender.current) {
-    isFirstRender.current = false;   // skip the very first run
-    return;
-  }
-  localStorage.setItem("courses", JSON.stringify(courses));
-}, [courses]);
 
   function addCourse() {
     if (name.trim() === "") return;
@@ -47,14 +34,8 @@ export default function CoursesPage() {
     setRoom("");
   }
 
-  function countLinkedHomework(id: number) {
-    const savedHomework = localStorage.getItem("homework");
-    const homework: {courseId: number } [] = savedHomework ? JSON.parse(savedHomework): [];
-    return homework.filter((hw) => hw.courseId === id).length;
-  }
-
   function requestDeleteCourse(course: {id: number; name: string}) {
-    const linkedCount = countLinkedHomework(course.id);
+    const linkedCount = homework.filter((hw) => hw.courseId === course.id).length;
 
     // Nothing linked, nothing to warn about.
     if (linkedCount === 0) {
@@ -66,11 +47,8 @@ export default function CoursesPage() {
   }
 
   function removeCourse(id: number) {
-    //Cascade : remove that homework and save it back
-    const savedHomework = localStorage.getItem("homework");
-    const homework: {courseId: number } [] = savedHomework ? JSON.parse(savedHomework): [];
-    const remaining = homework.filter((hw) => hw.courseId !== id);
-    localStorage.setItem("homework", JSON.stringify(remaining));
+    //Cascade : remove that homework too
+    setHomework(homework.filter((hw) => hw.courseId !== id));
 
     //Remove the course itself
     setCourses(courses.filter((course) => course.id !== id));

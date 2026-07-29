@@ -19,17 +19,12 @@ function splitValue(value: string) {
 
 export default function TimePicker({ value, onChange, placeholder = "Pick a time", className = "" }: Props) {
   const [open, setOpen] = useState(false);
-  const [hour, setHour] = useState(() => splitValue(value).hour);
-  const [minute, setMinute] = useState(() => splitValue(value).minute);
   const containerRef = useRef<HTMLDivElement>(null);
   const hourColumnRef = useRef<HTMLDivElement>(null);
 
-  // Stay in sync when the parent resets the field (e.g. after adding a course).
-  useEffect(() => {
-    const parts = splitValue(value);
-    setHour(parts.hour);
-    setMinute(parts.minute);
-  }, [value]);
+  // Derived from the prop rather than mirrored in state, so the field always
+  // matches whatever the parent holds (including resets after adding a course).
+  const { hour, minute } = splitValue(value);
 
   useEffect(() => {
     if (!open) return;
@@ -55,15 +50,11 @@ export default function TimePicker({ value, onChange, placeholder = "Pick a time
 
   function pickHour(nextHour: string) {
     // Picking an hour alone almost always means "on the hour".
-    const nextMinute = minute || "00";
-    setHour(nextHour);
-    setMinute(nextMinute);
-    onChange(`${nextHour}:${nextMinute}`);
+    onChange(`${nextHour}:${minute || "00"}`);
   }
 
   function pickMinute(nextMinute: string) {
-    setMinute(nextMinute);
-    if (hour) onChange(`${hour}:${nextMinute}`);
+    onChange(`${hour || "00"}:${nextMinute}`);
   }
 
   const columnClasses =
@@ -137,8 +128,6 @@ export default function TimePicker({ value, onChange, placeholder = "Pick a time
               type="button"
               onClick={() => {
                 onChange("");
-                setHour("");
-                setMinute("");
                 setOpen(false);
               }}
               className="rounded-md px-2 py-1 text-sm font-medium text-slate-400 hover:bg-slate-700 hover:text-slate-200"

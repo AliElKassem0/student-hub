@@ -1,37 +1,17 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import DatePicker, { formatLabel } from "../components/DatePicker";
-
-type Course = { id: number; name: string; time: string; room: string };
-type Homework = { id: number; courseId: number; title: string; description: string; dueDate: string; done: boolean };
+import { useCourses, useHomework } from "../lib/store";
 
 export default function HomeworkPage() {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [homework, setHomework] = useState<Homework[]>([]);
+  const [courses] = useCourses();
+  const [homework, setHomework] = useHomework();
 
   const [courseId, setCourseId] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
-
-  const isFirstRender = useRef(true);
-
-  useEffect(() => {
-    const savedCourses = localStorage.getItem("courses");
-    if (savedCourses) setCourses(JSON.parse(savedCourses));
-
-    const savedHomework = localStorage.getItem("homework");
-    if (savedHomework) setHomework(JSON.parse(savedHomework));
-  }, []);
-
- useEffect(() => {
-  if (isFirstRender.current) {
-    isFirstRender.current = false;
-    return;
-  }
-  localStorage.setItem("homework", JSON.stringify(homework));
-}, [homework]);
 
   function addHomework() {
     if (title.trim() === "" || courseId === "") return;

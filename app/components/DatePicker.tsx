@@ -24,14 +24,14 @@ function toKey(date: Date) {
   return `${date.getFullYear()}-${month}-${day}`;
 }
 
-function fromKey(key: string) {
+export function parseDateKey(key: string) {
   const [year, month, day] = key.split("-").map(Number);
   if (!year || !month || !day) return null;
   return new Date(year, month - 1, day);
 }
 
 export function formatLabel(key: string) {
-  const date = fromKey(key);
+  const date = parseDateKey(key);
   if (!date) return "";
   return `${date.getDate()} ${MONTHS[date.getMonth()].slice(0, 3)} ${date.getFullYear()}`;
 }
@@ -43,14 +43,15 @@ function leadingBlanks(year: number, month: number) {
 
 export default function DatePicker({ value, onChange, placeholder = "Pick a date", className = "" }: Props) {
   const [open, setOpen] = useState(false);
-  const [view, setView] = useState(() => fromKey(value) ?? new Date());
+  const [view, setView] = useState(() => parseDateKey(value) ?? new Date());
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Reopening on an existing value should land on that month, not wherever
   // the user browsed to last time.
-  useEffect(() => {
-    if (open) setView(fromKey(value) ?? new Date());
-  }, [open, value]);
+  function toggleOpen() {
+    if (!open) setView(parseDateKey(value) ?? new Date());
+    setOpen(!open);
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -88,7 +89,7 @@ export default function DatePicker({ value, onChange, placeholder = "Pick a date
     <div ref={containerRef} className={`relative ${className}`}>
       <button
         type="button"
-        onClick={() => setOpen(!open)}
+        onClick={toggleOpen}
         className="w-full flex items-center justify-between gap-2 rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-left text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
         <span className={value ? "text-slate-100" : "text-slate-400"}>
