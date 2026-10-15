@@ -6,13 +6,8 @@ A small web app for keeping track of university courses and homework, built with
 
 I built it because every planner I tried was either overkill or wanted an account before it would show me anything. This one opens straight into your homework.
 
-<!--
-Screenshots go here. Take one of the home page and one of the courses page,
-save them as docs/home.png and docs/courses.png, then uncomment:
-
-![Home page](docs/home.png)
+![Home page with homework due soon](docs/home.png)
 ![Courses page](docs/courses.png)
--->
 
 ## What it does
 
@@ -73,3 +68,7 @@ The parts that turned out to be more interesting than expected:
 - Sorting and filtering on the homework page
 - Multiple time slots per course
 - Accounts and a real database, so data follows you between devices
+
+## License
+
+[MIT](LICENSE)
